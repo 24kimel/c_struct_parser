@@ -1,0 +1,30 @@
+start: struct+
+
+struct: STRUCT_KEYWORD name OCURLY field_list CCURLY SEMICOLON
+
+field_list: field+
+field: (single_field
+     | array_field) SEMICOLON
+
+single_field: field_type name 
+array_field: field_type name OSQUARE array_length CSQUARE
+
+array_length: const_length | var_length
+
+const_length: INT
+var_length: WORD
+
+field_type: WORD
+name: WORD
+
+STRUCT_KEYWORD: "struct"
+OCURLY: "{"
+CCURLY: "}"
+OSQUARE: "["
+CSQUARE: "]"
+SEMICOLON: ";"
+
+%import common.WS
+%import common.INT
+%import common.WORD
+%ignore WS

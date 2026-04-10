@@ -5,6 +5,9 @@ from pprint import pprint
 
 from typing import List
 
+GRAMMAR_FILE="c_struct.lark"
+TEXT_FILE="structs.c"
+
 @dataclass
 class Field:
     name: str
@@ -60,46 +63,12 @@ class MyTransformer(Transformer):
 
 def main():
     logger.setLevel(logging.WARN)
-    grammar = '''
-start: struct+
+    with open(GRAMMAR_FILE) as f:
+        grammar = f.read()
 
-struct: STRUCT_KEYWORD name OCURLY field_list CCURLY SEMICOLON
+    with open(TEXT_FILE) as f:
+        text = f.read()
 
-field_list: field+
-field: (single_field
-     | array_field) SEMICOLON
-
-single_field: field_type name 
-array_field: field_type name OSQUARE array_length CSQUARE
-
-array_length: const_length | var_length
-
-const_length: INT
-var_length: WORD
-
-field_type: WORD
-name: WORD
-
-STRUCT_KEYWORD: "struct"
-OCURLY: "{"
-CCURLY: "}"
-OSQUARE: "["
-CSQUARE: "]"
-SEMICOLON: ";"
-
-%import common.WS
-%import common.INT
-%import common.WORD
-%ignore WS
-'''
-
-    text = '''
-struct s {
-    int x;
-    int y[3];
-    char z[x];
-};
-'''
     p = Lark(grammar)
     tree = p.parse(text)
     output = MyTransformer().transform(tree)
