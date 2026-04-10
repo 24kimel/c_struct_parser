@@ -3,7 +3,7 @@ from dataclasses import dataclass
 from lark import Lark, logger, Transformer
 from pprint import pprint
 
-from typing import List
+from typing import List, Union
 
 GRAMMAR_FILE="c_struct.lark"
 TEXT_FILE="structs.c"
@@ -29,11 +29,15 @@ class Struct:
 class Inheritance:
     parent: str
 
+@dataclass
+class ArrayInfo:
+    length: Union[int, str]
+
 nothing = lambda *args: None
 get_first_child = lambda self, l: l[0]
 get_children = lambda self, l: l
 
-class MyTransformer(Transformer):
+class StructTransformer(Transformer):
     INT = int
     WORD = str
     CNAME = str
@@ -41,21 +45,21 @@ class MyTransformer(Transformer):
     field_type = get_first_child
     const_length = get_first_child
     var_length = get_first_child
-    single_field = get_children
-    array_field = get_children
     array_length = get_first_child
     start = get_children
 
-    FIELD_ARRAY_NUM_CHILDREN = 5
-    FIELD_ARRAY_LENGTH_IDX = 3
+    ARRAY_INFO_LENGTH_IDX = 1
+    def array_info(self, array_info):
+        return ArrayInfo(array_info[self.ARRAY_INFO_LENGTH_IDX])
+
     FIELD_NAME_IDX = 1
     FIELD_TYPE_IDX = 0
-
     def field(self, field):
-        field_contents = field[0]
-        is_array = len(field_contents) == self.FIELD_ARRAY_NUM_CHILDREN
-        array_length = field_contents[self.FIELD_ARRAY_LENGTH_IDX] if is_array else ""
-        return Field(name=field_contents[self.FIELD_NAME_IDX], field_type=field_contents[self.FIELD_TYPE_IDX], is_array=is_array, array_length=array_length)
+        print(field)
+        array_info_list = [c for c in field if isinstance(c, ArrayInfo)]
+        is_array = len(array_info_list) > 0
+        array_length = array_info_list[0].length if is_array else ""
+        return Field(name=field[self.FIELD_NAME_IDX], field_type=field[self.FIELD_TYPE_IDX], is_array=is_array, array_length=array_length)
 
     INHERITANCE_PARENT_NAME = 1
     def inheritance(self, inheritance):
@@ -80,7 +84,7 @@ def main():
 
     p = Lark(grammar)
     tree = p.parse(text)
-    output = MyTransformer().transform(tree)
+    output = StructTransformer().transform(tree)
     pprint(output)
 
 

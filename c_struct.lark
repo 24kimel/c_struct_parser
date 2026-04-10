@@ -5,11 +5,10 @@ struct: STRUCT_KEYWORD CNAME (inheritance)? OCURLY field_list CCURLY SEMICOLON
 inheritance: COLON CNAME
 
 field_list: field+
-field: (single_field
-     | array_field) SEMICOLON
 
-single_field: field_type CNAME
-array_field: field_type CNAME OSQUARE array_length CSQUARE
+field: field_type CNAME (array_info)? SEMICOLON
+
+array_info: OSQUARE array_length CSQUARE
 
 array_length: const_length | var_length
 
