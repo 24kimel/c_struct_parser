@@ -1,4 +1,6 @@
 
+// c99 comment
+
 struct s {
     int x;
     int y[3];

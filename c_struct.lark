@@ -21,6 +21,10 @@ field_type: CNAME
 
 number: INT | HEX_NUMBER
 
+COMMENT: C99_COMMENT
+
+C99_COMMENT: /\/\/[^\n]*/
+
 // copied from python.lark
 HEX_NUMBER.2: "0" ("x" | "X") ("_"? ("0".."9" | "a".."f" | "A".."F"))+
 
@@ -38,3 +42,4 @@ CPAREN: ")"
 %import common.INT
 %import common.CNAME
 %ignore WS
+%ignore COMMENT
