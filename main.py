@@ -27,8 +27,8 @@ get_children = lambda self, l: l
 class MyTransformer(Transformer):
     INT = int
     WORD = str
+    CNAME = str
     field_list = get_children
-    name = get_first_child
     field_type = get_first_child
     const_length = get_first_child
     var_length = get_first_child

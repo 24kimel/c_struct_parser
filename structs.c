@@ -7,6 +7,6 @@ struct s {
 
 
 struct something {
-	s h;
-	bool truth;
+	s my_s;
+	bool is_truth;
 };
