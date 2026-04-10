@@ -4,17 +4,23 @@ from lark import Lark, logger, Transformer
 from pprint import pprint
 from functools import partial
 
-from typing import List, Union
+from typing import List, Union, Optional
 
 GRAMMAR_FILE="c_struct.lark"
 TEXT_FILE="structs.c"
+
+class FilterError(Exception):
+    ...
+
+@dataclass
+class ArrayInfo:
+    length: Union[int, str]
 
 @dataclass
 class Field:
     name: str
     field_type: str
-    is_array: bool
-    array_length: str
+    array_info: Optional[ArrayInfo]
 
 @dataclass
 class FieldList:
@@ -32,16 +38,21 @@ class Inheritance:
     parent: str
 
 @dataclass
-class ArrayInfo:
-    length: Union[int, str]
-
-@dataclass
 class StructId:
     struct_id: int
+
+def is_instance_kw(obj, classinfo):
+    return isinstance(obj, classinfo)
 
 nothing = lambda *args: None
 get_first_child = lambda self, l: l[0]
 get_children = lambda self, l: l
+
+def get_single_element_by_filter(_list, _filter):
+    matches = list(filter(_filter, _list))
+    if len(matches) != 1:
+        return None
+    return matches[0]
 
 class StructTransformer(Transformer):
     INT = int
@@ -67,24 +78,20 @@ class StructTransformer(Transformer):
     FIELD_NAME_IDX = 1
     FIELD_TYPE_IDX = 0
     def field(self, field):
-        array_info_list = [c for c in field if isinstance(c, ArrayInfo)]
-        is_array = len(array_info_list) > 0
-        array_length = array_info_list[0].length if is_array else ""
-        return Field(name=field[self.FIELD_NAME_IDX], field_type=field[self.FIELD_TYPE_IDX], is_array=is_array, array_length=array_length)
+        array_info = get_single_element_by_filter(field, partial(is_instance_kw, classinfo=ArrayInfo))
+        return Field(name=field[self.FIELD_NAME_IDX], field_type=field[self.FIELD_TYPE_IDX], array_info=array_info)
 
     INHERITANCE_PARENT_NAME = 1
     def inheritance(self, inheritance):
         return Inheritance(inheritance[self.INHERITANCE_PARENT_NAME])
 
     STRUCT_NAME_IDX = 1
-    STRUCT_FIELD_LIST_IDX = 3
-
     def struct(self, struct):
-        field_list = [c for c in struct if isinstance(c, FieldList)][0]
-        inheritance_list = [c for c in struct if isinstance(c, Inheritance)]
-        struct_id_list = [c for c in struct if isinstance(c, StructId)]
-        struct_id = struct_id_list[0].struct_id if len(struct_id_list) > 0 else 0
-        parent = [c for c in struct if isinstance(c, Inheritance)][0].parent if len(inheritance_list) > 0 else ""
+        field_list = get_single_element_by_filter(struct, partial(is_instance_kw, classinfo=FieldList))
+        struct_id = get_single_element_by_filter(struct, partial(is_instance_kw, classinfo=StructId))
+        struct_id = struct_id.struct_id if struct_id is not None else 0
+        inheritance_info = get_single_element_by_filter(struct, partial(is_instance_kw, classinfo=Inheritance))
+        parent = inheritance_info.parent if inheritance_info is not None else ""
         return Struct(name=struct[self.STRUCT_NAME_IDX], field_list=field_list.field_list, parent=parent, struct_id=struct_id)
 
 def main():
