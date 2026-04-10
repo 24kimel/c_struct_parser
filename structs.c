@@ -13,4 +13,9 @@ struct something {
 
 struct child : something {
 	int w;
+	uint32_t t[0x10];
+};
+
+struct grand_child(0x3333) : child {
+	int r;
 };

@@ -1,6 +1,8 @@
 start: struct+
 
-struct: STRUCT_KEYWORD CNAME (inheritance)? OCURLY field_list CCURLY SEMICOLON
+struct: STRUCT_KEYWORD CNAME struct_id? inheritance? OCURLY field_list CCURLY SEMICOLON
+
+struct_id: OPAREN number CPAREN
 
 inheritance: COLON CNAME
 
@@ -12,10 +14,15 @@ array_info: OSQUARE array_length CSQUARE
 
 array_length: const_length | var_length
 
-const_length: INT
+const_length: number
 var_length: CNAME
 
 field_type: CNAME
+
+number: INT | HEX_NUMBER
+
+// copied from python.lark
+HEX_NUMBER.2: "0" ("x" | "X") ("_"? ("0".."9" | "a".."f" | "A".."F"))+
 
 STRUCT_KEYWORD: "struct"
 COLON: ":"
@@ -24,6 +31,8 @@ CCURLY: "}"
 OSQUARE: "["
 CSQUARE: "]"
 SEMICOLON: ";"
+OPAREN: "("
+CPAREN: ")"
 
 %import common.WS
 %import common.INT
