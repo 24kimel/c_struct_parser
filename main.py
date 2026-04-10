@@ -16,9 +16,18 @@ class Field:
     array_length: str
 
 @dataclass
+class FieldList:
+    field_list: List[Field]
+
+@dataclass
 class Struct:
     name: str
+    parent: str
     field_list: List[Field]
+
+@dataclass
+class Inheritance:
+    parent: str
 
 nothing = lambda *args: None
 get_first_child = lambda self, l: l[0]
@@ -28,21 +37,14 @@ class MyTransformer(Transformer):
     INT = int
     WORD = str
     CNAME = str
-    field_list = get_children
+    field_list = FieldList
     field_type = get_first_child
     const_length = get_first_child
     var_length = get_first_child
     single_field = get_children
     array_field = get_children
     array_length = get_first_child
-    SEMICOLON = nothing
-    OSQUARE = nothing
-    CSQUARE = nothing
-    OCURLY = nothing
-    CCURLY = nothing
-    STRUCT_KEYWORD = nothing
     start = get_children
-
 
     FIELD_ARRAY_NUM_CHILDREN = 5
     FIELD_ARRAY_LENGTH_IDX = 3
@@ -55,11 +57,18 @@ class MyTransformer(Transformer):
         array_length = field_contents[self.FIELD_ARRAY_LENGTH_IDX] if is_array else ""
         return Field(name=field_contents[self.FIELD_NAME_IDX], field_type=field_contents[self.FIELD_TYPE_IDX], is_array=is_array, array_length=array_length)
 
+    INHERITANCE_PARENT_NAME = 1
+    def inheritance(self, inheritance):
+        return Inheritance(inheritance[self.INHERITANCE_PARENT_NAME])
+
     STRUCT_NAME_IDX = 1
     STRUCT_FIELD_LIST_IDX = 3
 
     def struct(self, struct):
-        return Struct(name=struct[self.STRUCT_NAME_IDX], field_list=struct[self.STRUCT_FIELD_LIST_IDX])
+        field_list = [c for c in struct if isinstance(c, FieldList)][0]
+        inheritance_list = [c for c in struct if isinstance(c, Inheritance)]
+        parent = [c for c in struct if isinstance(c, Inheritance)][0].parent if len(inheritance_list) > 0 else ""
+        return Struct(name=struct[self.STRUCT_NAME_IDX], field_list=field_list.field_list, parent=parent)
 
 def main():
     logger.setLevel(logging.WARN)

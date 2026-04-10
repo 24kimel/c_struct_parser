@@ -10,3 +10,7 @@ struct something {
 	s my_s;
 	bool is_truth;
 };
+
+struct child : something {
+	int w;
+};

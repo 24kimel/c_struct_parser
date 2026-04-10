@@ -1,6 +1,8 @@
 start: struct+
 
-struct: STRUCT_KEYWORD CNAME OCURLY field_list CCURLY SEMICOLON
+struct: STRUCT_KEYWORD CNAME (inheritance)? OCURLY field_list CCURLY SEMICOLON
+
+inheritance: COLON CNAME
 
 field_list: field+
 field: (single_field
@@ -17,6 +19,7 @@ var_length: CNAME
 field_type: CNAME
 
 STRUCT_KEYWORD: "struct"
+COLON: ":"
 OCURLY: "{"
 CCURLY: "}"
 OSQUARE: "["
